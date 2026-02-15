@@ -1,0 +1,5 @@
+MFFN_updated/data/
+MFFN_updated/output/
+MFFN_updated/work_dirs/
+__pycache__/
+*.pyc

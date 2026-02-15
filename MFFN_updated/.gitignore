@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+.venv/
+venv/
+.env
+.DS_Store
+
+# training artifacts / outputs
+output/
+outputs/
+work_dirs/
+runs/
+logs/
+checkpoints/
+data/
