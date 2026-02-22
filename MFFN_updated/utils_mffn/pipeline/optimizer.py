@@ -75,15 +75,40 @@ def group_params(model, group_mode, initial_lr, optim_cfg):
         if hasattr(model, "module"):
             model = model.module
         assert hasattr(model, "get_grouped_params"), "Cannot get the method get_grouped_params of the model."
+        # params_groups = model.get_grouped_params()
+        # params = [
+        #     {"params": params_groups["pretrained"], "lr": 0.1 * initial_lr},
+        #     {"params": params_groups["retrained"], "lr": initial_lr},
+        # ]
+
         params_groups = model.get_grouped_params()
-        params = [
-            {"params": params_groups["pretrained"], "lr": 0.1 * initial_lr},
-            {"params": params_groups["retrained"], "lr": initial_lr},
-        ]
+        pretrained = params_groups.get("pretrained", [])
+        retrained = params_groups.get("retrained", [])
+        
+        if len(pretrained) == 0:
+            retrained = pretrained + retrained
+            pretrained = []
+
+        params = [{"params": retrained, "lr": initial_lr}]
+        if len(pretrained) > 0:
+            params.insert(0, {"params": pretrained, "lr": 0.1 * initial_lr})
+            
+        
     else:
         raise NotImplementedError
     return params
 
+
+def get_grouped_params(self):
+    param_groups = {"pretrained": [], "retrained": []}
+
+    for name, param in self.named_parameters():
+        if name.startswith("shared_encoder."):
+            param_groups["pretrained"].append(param)
+        else:
+            param_groups["retrained"].append(param)
+
+    return param_groups
 
 def construct_optimizer(model, initial_lr, mode, group_mode, cfg):
     params = group_params(model, group_mode=group_mode, initial_lr=initial_lr, optim_cfg=cfg)

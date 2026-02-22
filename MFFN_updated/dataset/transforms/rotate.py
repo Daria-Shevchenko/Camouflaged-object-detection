@@ -40,7 +40,14 @@ class UniRotate(A.DualTransform):
         p=0.5,
     ):
         super(UniRotate, self).__init__(always_apply, p)
-        self.limit = A.to_tuple(limit)
+        # self.limit = A.to_tuple(limit)
+
+        if isinstance(limit, (int, float)):
+            self.limit = (-limit, limit)
+        elif isinstance(limit, (tuple, list)) and len(limit) == 2:
+            self.limit = (float(limit[0]), float(limit[1]))
+        else:
+            raise ValueError(f"Unsupported limit: {limit} (expected number or (min,max))")
         self.interpolation = interpolation
         self.border_mode = border_mode
         self.value = value

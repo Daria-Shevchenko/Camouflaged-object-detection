@@ -1,0 +1,12 @@
+Pillow>=8
+addict>=2.4
+albumentations>=1.0
+matplotlib>=3.4
+numpy
+opencv_python_headless
+openpyxl>=3.0
+scipy
+timm>=0.4
+tqdm
+ttach
+yapf

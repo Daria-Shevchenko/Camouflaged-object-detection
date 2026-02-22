@@ -1,6 +1,6 @@
 {
   "cod10k_camo_tr": {
-    "root": "/mnt/data/ucu/daria_test/MFFN_COD/data/COD/Train/COD10K",
+    "root": "/mnt/data/ucu/daria_test/MFFN_COD/MFFN_updated/data/COD/Train/COD10K",
     "image": {
       "path": "Image",
       "suffix": ".jpg"
@@ -56,7 +56,7 @@
     }
   },
   "cod10k_te": {
-    "root": "/mnt/data/ucu/daria_test/MFFN_COD/data/COD/Test/COD10K",
+    "root": "/mnt/data/ucu/daria_test/MFFN_COD/MFFN_updated/data/COD/Test/COD10K",
     "image": {
       "path": "Image",
       "suffix": ".jpg"

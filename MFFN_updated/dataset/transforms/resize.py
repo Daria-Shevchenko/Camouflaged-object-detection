@@ -47,22 +47,48 @@ class UniResize(A.DualTransform):
         return ("height", "width", "interpolation")
 
 
+# def ms_resize(img, scales, base_h=None, base_w=None, interpolation=cv2.INTER_LINEAR):
+#     assert isinstance(scales, (list, tuple))
+#     if base_h is None and base_w is None:
+#         h = img.shape[0]
+#         w = img.shape[1]
+#     else:
+#         h = base_h
+#         w = base_w
+#     return [A.resize(img, height=int(h * s), width=int(w * s), interpolation=interpolation) for s in scales]
+
 def ms_resize(img, scales, base_h=None, base_w=None, interpolation=cv2.INTER_LINEAR):
     assert isinstance(scales, (list, tuple))
     if base_h is None and base_w is None:
-        h = img.shape[0]
-        w = img.shape[1]
+        h, w = img.shape[:2]
     else:
-        h = base_h
-        w = base_w
-    return [A.resize(img, height=int(h * s), width=int(w * s), interpolation=interpolation) for s in scales]
+        h, w = base_h, base_w
+
+    outs = []
+    for s in scales:
+        rh = int(h * s)
+        rw = int(w * s)
+        t = A.Resize(height=rh, width=rw, interpolation=interpolation)
+        outs.append(t(image=img)["image"])
+    return outs
 
 
+# def ss_resize(img, scale, base_h=None, base_w=None, interpolation=cv2.INTER_LINEAR):
+#     if base_h is None and base_w is None:
+#         h = img.shape[0]
+#         w = img.shape[1]
+#     else:
+#         h = base_h
+#         w = base_w
+#     return A.resize(img, height=int(h * scale), width=int(w * scale), interpolation=interpolation)
 def ss_resize(img, scale, base_h=None, base_w=None, interpolation=cv2.INTER_LINEAR):
     if base_h is None and base_w is None:
-        h = img.shape[0]
-        w = img.shape[1]
+        h, w = img.shape[:2]
     else:
-        h = base_h
-        w = base_w
-    return A.resize(img, height=int(h * scale), width=int(w * scale), interpolation=interpolation)
+        h, w = base_h, base_w
+
+    rh = int(h * scale)
+    rw = int(w * scale)
+
+    transform = A.Resize(height=rh, width=rw, interpolation=interpolation)
+    return transform(image=img)["image"]

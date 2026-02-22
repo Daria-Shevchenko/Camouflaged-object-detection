@@ -13,7 +13,7 @@ train = dict(
     batch_size=8,
     num_workers=4,
     use_amp=True,
-    num_epochs=1,
+    num_epochs=10,
     epoch_based=True,
     lr=0.05,
     optimizer=dict(
@@ -42,7 +42,7 @@ train = dict(
 )
 
 test = dict(
-    batch_size=8,
+    batch_size=1,
     num_workers=4,
     show_bar=False,
 )
