@@ -77,3 +77,33 @@ def get_te_loader(cfg, shuffle=False, drop_last=False, pin_memory=True) -> list:
         )
         print(f"Testing with testset: {te_data_name}: {len(dataset)}")
         yield te_data_name, te_data_path, loader
+
+
+def get_val_loader(cfg, shuffle=False, drop_last=False, pin_memory=True):
+    if (not hasattr(cfg.datasets, "val")) or (cfg.datasets.val is None):
+        return
+    for i, (val_data_name, val_data_path) in enumerate(cfg.datasets.val.path.items()):
+        dataset = builder.build_obj_from_registry(
+            registry_name="DATASETS",
+            obj_name=cfg.datasets.val.dataset_type,
+            obj_cfg=dict(
+                root=(val_data_name, val_data_path),
+                shape=cfg.datasets.val.shape,
+                interp_cfg=cfg.datasets.val.get("interp_cfg", None),
+            ),
+        )
+
+        loader = data.DataLoader(
+            dataset=dataset,
+            batch_size=cfg.test.batch_size,
+            num_workers=cfg.test.num_workers,
+            shuffle=shuffle,
+            drop_last=drop_last,
+            pin_memory=pin_memory,
+            collate_fn=getattr(dataset, "collate_fn", None),
+            worker_init_fn=partial(misc.customized_worker_init_fn, base_seed=cfg.base_seed)
+            if cfg.use_custom_worker_init
+            else None,
+        )
+        print(f"Validating with valset: {val_data_name}: {len(dataset)}")
+        yield val_data_name, val_data_path, loader

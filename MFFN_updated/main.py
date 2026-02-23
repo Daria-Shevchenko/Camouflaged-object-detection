@@ -8,6 +8,7 @@ import shutil
 from itertools import chain
 import numpy as np
 import torch
+import matplotlib.pyplot as plt
 from tqdm import tqdm
 from utils_mffn import builder, configurator, io, misc, ops, pipeline, recorder
 def parse_config():
@@ -44,6 +45,17 @@ def parse_config():
             raise KeyError(f"{te_dataset} not in {args.datasets_info}!!!")
         te_paths[te_dataset] = datasets_info[te_dataset]
     config.datasets.test.path = te_paths
+
+
+    if hasattr(config.datasets, "val") and hasattr(config.datasets.val, "path"):
+        val_paths = {}
+        for val_dataset in config.datasets.val.path:
+            if val_dataset not in datasets_info:
+                raise KeyError(f"{val_dataset} not in {args.datasets_info}!!!")
+            val_paths[val_dataset] = datasets_info[val_dataset]
+        config.datasets.val.path = val_paths
+
+
     config.proj_root = os.path.dirname(os.path.abspath(__file__))
     config.exp_name = misc.construct_exp_name(model_name=config.model_name, cfg=config)
     if args.resume_from is not None:
@@ -112,6 +124,39 @@ def testing(model, cfg):
         )
         cfg.te_logger.record(f"Results on the testset({data_name}): {misc.mapping_to_str(data_path)}\n{seg_results}")
         cfg.excel_logger(row_data=seg_results, dataset_name=data_name, method_name=cfg.exp_name)
+
+def pick_val_metric(seg_results: dict):
+    for k in ["MAE", "mae"]:
+        if k in seg_results:
+            return float(seg_results[k]), k
+
+    for k, v in seg_results.items():
+        try:
+            return float(v), k
+        except Exception:
+            pass
+
+    raise RuntimeError(f"Cannot pick numeric metric from seg_results: {seg_results}")
+
+
+@torch.no_grad()
+def validating(model, cfg):
+    all_results = {}
+    for data_name, data_path, loader in pipeline.get_val_loader(cfg):
+        seg_results = test_once(
+            model=model,
+            data_loader=loader,
+            save_path=None,
+            tta_setting=cfg.test.tta,
+            clip_range=cfg.test.clip_range,
+            show_bar=False,
+            desc="[VAL]",
+            to_minmax=cfg.test.get("to_minmax", False),
+        )
+        all_results[data_name] = seg_results
+    return all_results
+
+
 def training(model, cfg) -> pipeline.ModelEma:
     tr_loader = pipeline.get_tr_loader(cfg)
     cfg.epoch_length = len(tr_loader)
@@ -167,6 +212,10 @@ def training(model, cfg) -> pipeline.ModelEma:
 
     time_logger = recorder.TimeRecoder()
     loss_recorder = recorder.AvgMeter()
+
+    train_epoch_loss = []
+    val_epoch_metric = []
+    val_metric_name = None
 
     curr_iter = 0
     for curr_epoch in range(start_epoch, cfg.train.num_epochs):
@@ -266,11 +315,63 @@ def training(model, cfg) -> pipeline.ModelEma:
         )
         time_logger.now(pre_msg="An Epoch End...")
 
+        # --- record train epoch loss ---
+        train_epoch_loss.append(loss_recorder.avg)
+
+        # --- validation after each epoch ---
+        if hasattr(cfg.datasets, "val") and cfg.datasets.val is not None:
+            val_model = model_ema.module if (model_ema is not None) else model
+            val_results = validating(model=val_model, cfg=cfg)
+
+            if len(val_results) > 0:
+                first_name = next(iter(val_results.keys()))
+                metric_value, metric_key = pick_val_metric(val_results[first_name])
+
+                if val_metric_name is None:
+                    val_metric_name = metric_key
+
+                val_epoch_metric.append(metric_value)
+
+                cfg.tr_logger.record(
+                    f"[VAL] epoch={curr_epoch} dataset={first_name} {metric_key}={metric_value}"
+                )
+
+                if cfg.log_interval.tensorboard > 0:
+                    cfg.tb_logger.record_curve("train/epoch_avg_loss", loss_recorder.avg, curr_epoch)
+                    cfg.tb_logger.record_curve(f"val/{metric_key}", metric_value, curr_epoch)
+
+
         if curr_iter >= cfg.train.num_iters:
             break
 
     # only save the last weight
     io.save_weight(model=model, save_path=cfg.path.final_state_net)
+
+    # --- save graphics
+    if len(train_epoch_loss) > 0:
+        epochs = list(range(len(train_epoch_loss)))
+
+        fig, ax1 = plt.subplots()
+        ax1.plot(epochs, train_epoch_loss, label="Train loss")
+        ax1.set_xlabel("Epoch")
+        ax1.set_ylabel("Train loss")
+
+        if len(val_epoch_metric) > 0:
+            ax2 = ax1.twinx()
+            ax2.plot(epochs[:len(val_epoch_metric)], val_epoch_metric, label=f"Val {val_metric_name or 'metric'}")
+            ax2.set_ylabel(f"Val {val_metric_name or 'metric'}")
+
+            lines1, labels1 = ax1.get_legend_handles_labels()
+            lines2, labels2 = ax2.get_legend_handles_labels()
+            ax1.legend(lines1 + lines2, labels1 + labels2, loc="best")
+        else:
+            ax1.legend(loc="best")
+
+        ax1.set_title("Train loss and validation metric per epoch")
+        plt.tight_layout()
+        plt.savefig(os.path.join(cfg.path.pth_log, "curve_train_and_val.png"))
+        plt.close(fig)
+            
     return model_ema
 
 

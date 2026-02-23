@@ -13,7 +13,7 @@ train = dict(
     batch_size=8,
     num_workers=4,
     use_amp=True,
-    num_epochs=10,
+    num_epochs=20,
     epoch_based=True,
     lr=0.05,
     optimizer=dict(
@@ -51,7 +51,14 @@ datasets = dict(
     train=dict(
         dataset_type="MFFN_cod_tr",
         shape=dict(h=384, w=384),
-        path=["cod10k_camo_tr"],
+        # path=["cod10k_camo_tr"],
+        path=["cod10k_camo_tr_90"],
+        interp_cfg=dict(),
+    ),
+    val=dict(
+        dataset_type="MFFN_cod_te",
+        shape=dict(h=384, w=384),
+        path=["cod10k_camo_val_10"],
         interp_cfg=dict(),
     ),
     test=dict(
@@ -62,8 +69,6 @@ datasets = dict(
         interp_cfg=dict(),
     ),
 )
-
-
 
 
 

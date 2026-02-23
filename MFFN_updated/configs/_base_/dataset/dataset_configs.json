@@ -29,6 +29,18 @@
       "suffix": ".png"
     }
   },
+   "cod10k_camo_tr_90": {
+    "root": "/mnt/data/ucu/daria_test/MFFN_COD/MFFN_updated/data/COD/COD_with_val/Train_90",
+    "image": { "path": "Image", "suffix": ".jpg" },
+    "mask":  { "path": "GT_Object", "suffix": ".png" },
+    "edge":  { "path": "GT_Edge", "suffix": ".png" }
+  },
+  "cod10k_camo_val_10": {
+    "root": "/mnt/data/ucu/daria_test/MFFN_COD/MFFN_updated/data/COD/COD_with_val/Val_10",
+    "image": { "path": "Image", "suffix": ".jpg" },
+    "mask":  { "path": "GT_Object", "suffix": ".png" },
+    "edge":  { "path": "GT_Edge", "suffix": ".png" }
+  },
   "chameleon": {
     "root": "/root/MFFN/data/COD/Test/CHAMELEON",
     "image": {

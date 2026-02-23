@@ -1056,34 +1056,6 @@ class MFFN(BasicModelClass):
 
 
 # #  dino-resnet
-#     # def test_forward(self, data, **kwargs):
-#     #     output = self.body(
-#     #         c1_scale=data["image_c1"],
-#     #         o_scale=data["image_o"],
-#     #         c2_scale=data["image_c2"],
-#     #         a1_scale=data["image_a1"],
-#     #         a2_scale=data["image_a2"],
-#     #     )
-
-#     #     save_path = "work_dirs/vis/mffn_feats.png"
-
-#     #     if not os.path.exists(save_path):
-#     #         os.makedirs(os.path.dirname(save_path), exist_ok=True)
-
-#     #         feats = self.shared_encoder(data["image_o"])
-#     #         en_feats = [feats["c1"], feats["c2"], feats["c3"], feats["c4"], feats["c5"]]
-#     #         c5, c4, c3, c2, c1 = self.translayer(en_feats)
-
-#     #         save_feat_grid(
-#     #             save_path=save_path,
-#     #             input_img_chw=data["image_o"][1],
-#     #             feat_list=[c5[0], c4[0], c3[0], c2[0], c1[0]],
-#     #             titles=["Trans c5", "Trans c4", "Trans c3", "Trans c2", "Trans c1"],
-#     #         )
-
-#     #     return output["seg"]
-
-# #  dino-resnet changed! 
 #     def test_forward(self, data, **kwargs):
 #         output = self.body(
 #             c1_scale=data["image_c1"],
@@ -1093,36 +1065,64 @@ class MFFN(BasicModelClass):
 #             a2_scale=data["image_a2"],
 #         )
 
-#         target = "COD10K-NonCAM-3-Flying-1515.png"
-#         img_names = data["img_name"]
+#         save_path = "work_dirs/vis/mffn_feats.png"
 
-#         print(img_names)
+#         if not os.path.exists(save_path):
+#             os.makedirs(os.path.dirname(save_path), exist_ok=True)
 
-#         if isinstance(img_names, (list, tuple)):
-#             hits = [i for i, n in enumerate(img_names) if os.path.basename(n) == target]
-#             if not hits:
-#                 return output["seg"]
-#             idx = hits[0]
-#         else:
-#             if os.path.basename(img_names) != target:
-#                 return output["seg"]
-#             idx = 0
+#             feats = self.shared_encoder(data["image_o"])
+#             en_feats = [feats["c1"], feats["c2"], feats["c3"], feats["c4"], feats["c5"]]
+#             c5, c4, c3, c2, c1 = self.translayer(en_feats)
 
-#         save_path = f"work_dirs/vis/mffn_feats_{target}.png"
-#         os.makedirs(os.path.dirname(save_path), exist_ok=True)
-
-#         feats = self.shared_encoder(data["image_o"])
-#         en_feats = [feats["c1"], feats["c2"], feats["c3"], feats["c4"], feats["c5"]]
-#         c5, c4, c3, c2, c1 = self.translayer(en_feats)
-
-#         save_feat_grid(
-#             save_path=save_path,
-#             input_img_chw=data["image_o"][idx],
-#             feat_list=[c5[idx], c4[idx], c3[idx], c2[idx], c1[idx]],
-#             titles=["Trans c5", "Trans c4", "Trans c3", "Trans c2", "Trans c1"],
-#         )
+#             save_feat_grid(
+#                 save_path=save_path,
+#                 input_img_chw=data["image_o"][1],
+#                 feat_list=[c5[0], c4[0], c3[0], c2[0], c1[0]],
+#                 titles=["Trans c5", "Trans c4", "Trans c3", "Trans c2", "Trans c1"],
+#             )
 
 #         return output["seg"]
+
+# #  dino-resnet changed! 
+#     # def test_forward(self, data, **kwargs):
+#     #     output = self.body(
+#     #         c1_scale=data["image_c1"],
+#     #         o_scale=data["image_o"],
+#     #         c2_scale=data["image_c2"],
+#     #         a1_scale=data["image_a1"],
+#     #         a2_scale=data["image_a2"],
+#     #     )
+
+#     #     target = "COD10K-NonCAM-3-Flying-1515.png"
+#     #     img_names = data["img_name"]
+
+#     #     print(img_names)
+
+#     #     if isinstance(img_names, (list, tuple)):
+#     #         hits = [i for i, n in enumerate(img_names) if os.path.basename(n) == target]
+#     #         if not hits:
+#     #             return output["seg"]
+#     #         idx = hits[0]
+#     #     else:
+#     #         if os.path.basename(img_names) != target:
+#     #             return output["seg"]
+#     #         idx = 0
+
+#     #     save_path = f"work_dirs/vis/mffn_feats_{target}.png"
+#     #     os.makedirs(os.path.dirname(save_path), exist_ok=True)
+
+#     #     feats = self.shared_encoder(data["image_o"])
+#     #     en_feats = [feats["c1"], feats["c2"], feats["c3"], feats["c4"], feats["c5"]]
+#     #     c5, c4, c3, c2, c1 = self.translayer(en_feats)
+
+#     #     save_feat_grid(
+#     #         save_path=save_path,
+#     #         input_img_chw=data["image_o"][idx],
+#     #         feat_list=[c5[idx], c4[idx], c3[idx], c2[idx], c1[idx]],
+#     #         titles=["Trans c5", "Trans c4", "Trans c3", "Trans c2", "Trans c1"],
+#     #     )
+
+#     #     return output["seg"]
 
 #     def cal_loss(self, all_preds: dict, gts: torch.Tensor, method="cos", iter_percentage: float = 0):
 #         ual_coef = get_coef(iter_percentage, method)
