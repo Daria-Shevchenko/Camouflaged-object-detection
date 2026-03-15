@@ -119,7 +119,7 @@ def testing(model, cfg):
             data_loader=loader,
             tta_setting=cfg.test.tta,
             clip_range=cfg.test.clip_range,
-            show_bar=cfg.test.get("show_bar", False),
+            show_bar=cfg.test.get("show_bar", True),
             to_minmax=cfg.test.get("to_minmax", False),
         )
         cfg.te_logger.record(f"Results on the testset({data_name}): {misc.mapping_to_str(data_path)}\n{seg_results}")

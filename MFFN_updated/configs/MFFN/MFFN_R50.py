@@ -9,13 +9,18 @@ deterministic = True
 use_custom_worker_init = False
 model_name = "MFFN"
 
+
+ # batch_size=8,
+    # num_workers=4,
+
 train = dict(
-    batch_size=8,
-    num_workers=4,
+    batch_size=2,
+    num_workers=8,
     use_amp=True,
-    num_epochs=20,
+    num_epochs=10,
     epoch_based=True,
-    lr=0.05,
+    # lr=0.05,
+    lr=0.005,
     optimizer=dict(
         mode="sgd",
         set_to_none=True,
@@ -26,6 +31,7 @@ train = dict(
             nesterov=False,
         ),
     ),
+    grad_acc_step=8,
     sche_usebatch=True,
     scheduler=dict(
         warmup=dict(
@@ -42,9 +48,9 @@ train = dict(
 )
 
 test = dict(
-    batch_size=1,
+    batch_size=2,
     num_workers=4,
-    show_bar=False,
+    show_bar=True,
 )
 
 datasets = dict(
@@ -52,13 +58,13 @@ datasets = dict(
         dataset_type="MFFN_cod_tr",
         shape=dict(h=384, w=384),
         # path=["cod10k_camo_tr"],
-        path=["cod10k_camo_tr_90"],
+        path=["cod10k_camo_tr_90"], # cod10k_camo_tr_90
         interp_cfg=dict(),
     ),
     val=dict(
         dataset_type="MFFN_cod_te",
         shape=dict(h=384, w=384),
-        path=["cod10k_camo_val_10"],
+        path=["cod10k_camo_val_10"], # cod10k_camo_val_10
         interp_cfg=dict(),
     ),
     test=dict(
