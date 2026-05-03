@@ -7,8 +7,28 @@ import numpy as np
 from py_sod_metrics.sod_metrics import Emeasure, Fmeasure, MAE, Smeasure, WeightedFmeasure
 
 
+
+class IoU(object):
+    def __init__(self, threshold=128, eps=1e-8):
+        self.threshold = threshold
+        self.eps = eps
+        self.ious = []
+
+    def step(self, pred: np.ndarray, gt: np.ndarray):
+        pred_bin = pred >= self.threshold
+        gt_bin = gt >= 128
+
+        intersection = np.logical_and(pred_bin, gt_bin).sum()
+        union = np.logical_or(pred_bin, gt_bin).sum()
+
+        iou = intersection / (union + self.eps)
+        self.ious.append(iou)
+
+    def get_results(self):
+        return {"iou": float(np.mean(self.ious)) if len(self.ious) > 0 else 0.0}
+
 class CalTotalMetric(object):
-    __slots__ = ["cal_mae", "cal_fm", "cal_sm", "cal_em", "cal_wfm"]
+    __slots__ = ["cal_mae", "cal_fm", "cal_sm", "cal_em", "cal_wfm", "cal_iou"]
 
     def __init__(self):
         self.cal_mae = MAE()
@@ -16,6 +36,7 @@ class CalTotalMetric(object):
         self.cal_sm = Smeasure()
         self.cal_em = Emeasure()
         self.cal_wfm = WeightedFmeasure()
+        self.cal_iou = IoU()
 
     def step(self, pred: np.ndarray, gt: np.ndarray, gt_path: str):
         assert pred.ndim == gt.ndim and pred.shape == gt.shape, (pred.shape, gt.shape, gt_path)
@@ -27,6 +48,7 @@ class CalTotalMetric(object):
         self.cal_sm.step(pred, gt)
         self.cal_em.step(pred, gt)
         self.cal_wfm.step(pred, gt)
+        self.cal_iou.step(pred, gt)
 
     def get_results(self, bit_width: int = 3) -> dict:
         fm = self.cal_fm.get_results()["fm"]
@@ -34,6 +56,7 @@ class CalTotalMetric(object):
         sm = self.cal_sm.get_results()["sm"]
         em = self.cal_em.get_results()["em"]
         mae = self.cal_mae.get_results()["mae"]
+        iou = self.cal_iou.get_results()["iou"]
         results = {
             "Smeasure": sm,
             "wFmeasure": wfm,
@@ -44,10 +67,12 @@ class CalTotalMetric(object):
             "adpFm": fm["adp"],
             "meanFm": fm["curve"].mean(),
             "maxFm": fm["curve"].max(),
+            "IoU": iou,
         }
 
         def _round_w_zero_padding(_x):
-            _x = str(_x.round(bit_width))
+            # _x = str(_x.round(bit_width))
+            _x = str(round(_x, bit_width))
             _x += "0" * (bit_width - len(_x.split(".")[-1]))
             return _x
 
